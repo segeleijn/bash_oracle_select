@@ -1,0 +1,9 @@
+File (case insensitive) exists: select.txt
+SELECT count(*)
+FROM dba_tbles
+FROM dba_tbles
+     *
+ERROR at line 2:
+ORA-00942: table or view does not exist
+
+
