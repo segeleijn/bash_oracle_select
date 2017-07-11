@@ -1,7 +1,5 @@
 #!/usr/bin/bash
 # -xv
-#ORACLE_SID=$1
-
 #And here's a starting point using Bash:
 #  fci -- check if file_case_insensitive exists
 # (on a case sensitive file system; complete file paths only!)
@@ -19,7 +17,7 @@ filepath="${filepath%"${filepath##*[!/]}"}"  # remove trailing slashes, if any
 dirpath="${filepath%/*}"
 name="${filepath##*/}"
 
-IFS='/'
+IFS='/python/'
 dirs=( ${dirpath} )
 
 if [[ ${#dirs[@]} -eq 0 ]]; then
@@ -29,23 +27,17 @@ else
    IFS=""
    dirs=( ${dirs[@]} )
    ndirs=${#dirs[@]}
-
    for ((i=0; i < ${ndirs}; i++)); do
-
       if [[ $i -eq 0 ]]; then
          checkdirs=( '/' )
       else
          checkdirs=( "${dirstmp[@]}" )
       fi
-
       IFS=$'\777'
       dirstmp=( $( find -x -L "${checkdirs[@]}" -mindepth 1 -maxdepth 1 -type d -iname "${dirs[i]}" -print0 2>/dev/null | tr '\0' '\777' ) )
-
       IFS=""
       fulldirpaths=( ${fulldirpaths[@]} ${dirstmp[@]} )
-
    done
-
 fi
 
 printf "fulldirpaths: %s\n" "${fulldirpaths[@]}" | nl
@@ -70,7 +62,6 @@ else
    return 0
 fi
 }
-
 
 #------------------------------------------------------------------
 # === Basic functions =============================================
@@ -199,6 +190,8 @@ do
     if [ "${sql#SELECT}" = "$sql" ]
     then
         echo "Not a SELECT!" >>$LOGFILE
+        echo $sql >>$LOGFILE
+        exit
     else
         echo "$sql"  >>$LOGFILE
     fi
