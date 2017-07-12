@@ -1,8 +1,6 @@
 #!/usr/bin/bash
 # -xv
-#And here's a starting point using Bash:
 #  fci -- check if file_case_insensitive exists
-# (on a case sensitive file system; complete file paths only!)
 
 function fci() {
 
@@ -17,7 +15,7 @@ filepath="${filepath%"${filepath##*[!/]}"}"  # remove trailing slashes, if any
 dirpath="${filepath%/*}"
 name="${filepath##*/}"
 
-IFS='/python/'
+IFS='/python/'  ##aanpassen voor de server variant
 dirs=( ${dirpath} )
 
 if [[ ${#dirs[@]} -eq 0 ]]; then
@@ -103,7 +101,7 @@ export DATUM=$(date +"%Y""%m""%d_""%H""%M")
 export SCRIPT=$(basename $0)
 export CURDIR="$( cd "$( dirname "$0" )" && pwd )"
 #export ORATAB="/etc/oratab"
-export ORATAB=oratab
+export ORATAB=./oratab
 export LOGDIR=/python/read_select
 export LOGFILE=${CURDIR}/${SCRIPT}_${ORACLE_SID}_${DATUM}.out
 export TMPFILE=${LOGDIR}/${SCRIPT}_${ORACLE_SID}_${DATUM}_tmp
@@ -121,20 +119,24 @@ export PATH=PATH=/usr/local/bin:/usr/bin:/cygdrive/c/oracle/product/dbhome_1/bin
 ###  do_sql function
 do_sql ()
 {
-#typeset -n x=$1
-temp=`$SQLPLUS -s system/oracle  >>$LOGFILE <<endl
+# temp=`$SQLPLUS -s system/oracle  >>$LOGFILE <<endl
+#   set define off echo off head on feed off newpage none pagesize 1000 linesize 200
+#   @f2.sql
+#   exit
+#endl `
+temp=$($SQLPLUS -s system/oracle  >>$LOGFILE <<endl
   set define off echo off head on feed off newpage none pagesize 1000 linesize 200
   @f2.sql
   exit
-endl `
+endl
+)
+
 
 #echo tempvariable $temp
 #x=$(echo ${temp} | sed -e 's/^ *//g;s/ *$//g')
 #echo tempvariable $temp
-#echo TEST $x
 #return $x
 }
-
 
 ############
 ## start main
@@ -168,19 +170,34 @@ find_sqlplus
 FILE='select.txt'
 
 if fci "${FILE}" ; then
-   echo "File (case insensitive) exists: ${FILE}" >$LOGFILE
+   echo "Select.txt: ${FILE}" >$LOGFILE
 else
-   echo "File (case insensitive) does NOT exist: ${FILE}"  >$LOGFILE
+   echo "Select.txt bestand niet gevonden: ${FILE}"  >$LOGFILE
    ## exit if $FILE not exists
 fi
 
 ## first line contains orasid
 read -r oraclesid <$FILE
-## rest file conatins sql text
-(head -1 > /dev/null; cat > f2.sql) < $FILE
-#echo ingelezen oraclesid: $oraclesid
 ## test oraclesid against existing oracle db
-##
+
+echo $ORATAB
+#db=`egrep -i ":Y|:N" $ORATAB | cut -d":" -f1 | grep -v "\#" | grep -v "\*"`
+db=$(egrep -i ":Y|:N" $ORATAB | cut -d":" -f1 | grep -v "\#" | grep -v "\*")
+echo $db
+
+# pslist="`ps -ef | grep pmon`"
+# for i in $db ; do
+#   echo  "$pslist" | grep  "ora_pmon_$i"  > /dev/null 2>$1
+#   if (( $? )); then
+#         echo "Oracle Instance - $i:       Down"
+#   else
+#         echo "Oracle Instance - $i:       Up"
+#   fi
+# done
+
+
+## rest file contains sql text
+(head -1 > /dev/null; cat > f2.sql) < $FILE
 
 ## test constructie select.txt file
 ## als ongeldig statement >> exit
@@ -198,3 +215,6 @@ do
 done < f2.sql
 
 do_sql
+
+#na testwerk:
+# rm $FILE
